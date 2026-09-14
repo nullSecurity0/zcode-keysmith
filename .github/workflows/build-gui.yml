@@ -1,11 +1,11 @@
 name: Build Windows GUI
 
 on:
-  workflow_dispatch: # 允许你在 GitHub 网页上手动点击按钮触发
+  workflow_dispatch:
 
 jobs:
   build-windows:
-    runs-on: windows-latest # 使用 GitHub 官方提供的 Windows 虚拟机（自带 VS2022/C++）
+    runs-on: windows-latest
 
     steps:
       - name: 1. 拉取仓库代码
@@ -24,19 +24,15 @@ jobs:
       - name: 4. 安装 Rust 工具链
         uses: dtolnay/rust-toolchain@stable
 
-      - name: 5. 安装依赖并编译 Sidecar
+      - name: 5. 安装依赖
         working-directory: gui
         run: |
+          python -m pip install -r requirements-build.txt
           npm ci
-          python -m venv src-tauri/target/sidecar-venv
-          ./src-tauri/target/sidecar-venv/Scripts/python.exe -m pip install -r requirements-build.txt
-          $env:PYTHON = "$((Get-Location).Path)/src-tauri/target/sidecar-venv/Scripts/python.exe"
-          npm run build:sidecar
 
-      - name: 6. 打包 Tauri 桌面端
+      - name: 6. 打包 Tauri 桌面端（自动编译 sidecar 并生成安装包）
         working-directory: gui
-        run: |
-          npm run bundle
+        run: npm run bundle
 
       - name: 7. 上传生成的 exe 安装包
         uses: actions/upload-artifact@v4
